@@ -41,7 +41,7 @@ export default function ChatLayout({
   }, [menu]);
 
   return (
-    <div className="w-screen h-screen flex">
+    <div className="flex w-screen h-screen overflow-hidden">
       <nav className={classes.navbar}>
         <div className={classes.navbarMain}>
           <Group className={classes.header} justify="space-between">
@@ -65,7 +65,7 @@ export default function ChatLayout({
           </a>
         </div>
       </nav>
-      {children}
+      <div className="flex-1 w-full">{children}</div>
     </div>
   );
 }

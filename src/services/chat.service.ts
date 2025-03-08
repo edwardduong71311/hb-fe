@@ -1,26 +1,34 @@
+import { botAnswerReceived, botFinished } from "@/state/conversationSlice";
 import { ChatResponse } from "@/types/chat.type";
+import { createAsyncThunk } from "@reduxjs/toolkit";
 
-export const chatWithBot = (text: string) => {
-  const eventSource = new EventSource(
-    process.env.NEXT_PUBLIC_CHAT_SERVER + "/chats?text=" + text
-  );
-
-  eventSource.onmessage = (event: MessageEvent<string>) => {
+export const streamAnswer = createAsyncThunk(
+  "streamAnswer",
+  async (text: string, { dispatch, rejectWithValue }) => {
     try {
-      const data: ChatResponse = JSON.parse(event.data);
+      const eventSource = new EventSource(
+        process.env.NEXT_PUBLIC_CHAT_SERVER +
+          "/chats?text=" +
+          encodeURIComponent(text)
+      );
 
-      if (data.done) {
+      eventSource.onmessage = (event: MessageEvent<string>) => {
+        try {
+          const data: ChatResponse = JSON.parse(event.data);
+          dispatch(botAnswerReceived(data.text));
+        } catch (error) {
+          eventSource.close();
+          dispatch(botFinished());
+        }
+      };
+
+      eventSource.onerror = (error) => {
         eventSource.close();
-      }
-
-      console.log(data);
+        dispatch(botFinished());
+        return rejectWithValue("SSE connection failed");
+      };
     } catch (error) {
-      console.error("SSE onmessage", error);
+      return rejectWithValue(error);
     }
-  };
-
-  eventSource.onerror = () => {
-    console.error("SSE onerror");
-    eventSource.close();
-  };
-};
+  }
+);
