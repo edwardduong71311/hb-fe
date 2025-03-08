@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 
 import classes from "./main.module.css";
 import { useAppSelector, useAppDispatch } from "@/state/hook";
-import { streamAnswer } from "@/services/chat.service";
+import { getConversationId, streamAnswer } from "@/services/chat.service";
 import { addPatientMessage } from "@/state/conversationSlice";
 import { ChatMessageType } from "@/types/chat.type";
 
@@ -16,11 +16,8 @@ export default function ChatPage() {
 
   const dispatch = useAppDispatch();
   const messages = useAppSelector((state) => state.conv.conversation);
+  const conversationId = useAppSelector((state) => state.conv.id);
   const loading = useAppSelector((state) => state.conv.loading);
-
-  useEffect(() => {
-    document.title = "Chat";
-  }, []);
 
   const form = useForm({
     mode: "uncontrolled",
@@ -30,14 +27,25 @@ export default function ChatPage() {
   });
 
   const handleInput = (values: typeof form.values) => {
+    if (!conversationId) return;
     if (loading) return;
     if (!values.input) return;
 
     dispatch(addPatientMessage(values.input));
-    dispatch(streamAnswer(values.input));
+    dispatch(
+      streamAnswer({
+        id: conversationId,
+        text: values.input,
+      })
+    );
 
     form.setValues({ input: "" });
   };
+
+  useEffect(() => {
+    document.title = "Chat";
+    dispatch(getConversationId());
+  }, []);
 
   useEffect(() => {
     inputRef.current?.focus();

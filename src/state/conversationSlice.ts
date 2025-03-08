@@ -1,8 +1,10 @@
+import { getConversationId } from "@/services/chat.service";
 import { ChatMessageType, ConversationState } from "@/types/chat.type";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 const initialState: ConversationState = {
   loading: false,
+  id: "",
   conversation: [],
 };
 
@@ -34,6 +36,19 @@ export const conversationSlice = createSlice({
     botFinished: (state) => {
       state.loading = false;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(getConversationId.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(getConversationId.fulfilled, (state, action) => {
+        state.loading = false;
+        state.id = action.payload;
+      })
+      .addCase(getConversationId.rejected, (state, action) => {
+        state.loading = false;
+      });
   },
 });
 

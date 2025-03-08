@@ -9,6 +9,7 @@ export enum ChatMessageType {
 
 export interface ConversationState {
   loading: boolean;
+  id: string;
   conversation: ChatMessage[];
 }
 
